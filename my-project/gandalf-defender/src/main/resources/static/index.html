@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gandalf Defender</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --surface: #14161f;
+    --surface-2: #1c1f2b;
+    --border: #262a38;
+    --text: #e8e9ed;
+    --text-dim: #8b8f9e;
+    --accent: #7c5cff;
+    --accent-dim: #5a3fd9;
+    --success: #2ecc71;
+    --danger: #ff5c5c;
+    --warn: #f5a623;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at 20% 0%, #171a24 0%, var(--bg) 55%);
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px;
+  }
+
+  .app { width: 100%; max-width: 620px; }
+
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .logo { font-size: 1.8rem; line-height: 1; }
+  h1 { font-size: 1.4rem; font-weight: 600; margin: 0; letter-spacing: -0.02em; }
+  .subtitle { color: var(--text-dim); font-size: 0.92rem; margin: 4px 0 28px 0; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 4px; }
+
+  .level-btn {
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 10px;
+    padding: 10px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .level-btn .num { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .level-btn .desc { font-size: 0.68rem; margin-top: 2px; display: block; line-height: 1.2; }
+  .level-btn.active { border-color: var(--accent); background: rgba(124, 92, 255, 0.12); }
+  .level-btn.active .num { color: var(--accent); }
+  .level-btn:hover { border-color: var(--accent-dim); }
+
+  .composer { display: flex; gap: 10px; align-items: flex-end; }
+
+  textarea {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: none;
+    height: 46px;
+    transition: border-color 0.15s ease;
+  }
+
+  textarea:focus { outline: none; border-color: var(--accent); }
+
+  button.send {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0 20px;
+    height: 46px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+  }
+
+  button.send:hover { background: var(--accent-dim); }
+  button.send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .log { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; gap: 10px; align-items: flex-start; }
+  .row.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; flex-shrink: 0;
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+
+  .bubble {
+    max-width: 78%;
+    padding: 11px 15px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .row.user .bubble { background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+  .row.bot .bubble { background: var(--surface-2); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .row.blocked .bubble { background: rgba(255, 92, 92, 0.1); border: 1px solid var(--danger); color: #ffb3b3; border-bottom-left-radius: 4px; }
+  .row.error .bubble { background: rgba(245, 166, 35, 0.1); border: 1px solid var(--warn); color: #ffd699; }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 5px;
+    margin-bottom: 6px;
+  }
+
+  .badge.blocked { background: var(--danger); color: white; }
+  .badge.success { background: var(--success); color: #06210f; }
+
+  .typing { display: flex; gap: 4px; padding: 4px 0; }
+  .typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); animation: bounce 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  .empty { text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 30px 10px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">🧙</div>
+    <h1>Gandalf Defender</h1>
+  </header>
+  <p class="subtitle">Pick a defense level, then try to get the secret password out of it.</p>
+
+  <div class="panel">
+    <div class="label">Defense level</div>
+    <div class="level-grid" id="levels">
+      <div class="level-btn active" data-level="0"><div class="num">0</div><span class="desc">None</span></div>
+      <div class="level-btn" data-level="1"><div class="num">1</div><span class="desc">Told not to</span></div>
+      <div class="level-btn" data-level="2"><div class="num">2</div><span class="desc">+ output filter</span></div>
+      <div class="level-btn" data-level="3"><div class="num">3</div><span class="desc">+ input filter</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="log" id="log">
+      <div class="empty" id="emptyState">No messages yet — try asking for the password.</div>
+    </div>
+  </div>
+
+  <div class="composer">
+    <textarea id="message" placeholder="Type your attempt..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); send();}"></textarea>
+    <button class="send" id="sendBtn" onclick="send()">Send</button>
+  </div>
+</div>
+
+<script>
+let currentLevel = 0;
+
+document.querySelectorAll('.level-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentLevel = parseInt(btn.dataset.level);
+  });
+});
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function addRow(type, text, badge) {
+  const emptyState = document.getElementById('emptyState');
+  if (emptyState) emptyState.remove();
+
+  const log = document.getElementById('log');
+  const row = document.createElement('div');
+  row.className = 'row ' + type;
+
+  const avatar = type === 'user' ? '🧑' : (type === 'blocked' ? '🛡️' : (type === 'error' ? '⚠️' : '🤖'));
+  const badgeHtml = badge ? `<span class="badge ${type === 'blocked' ? 'blocked' : 'success'}">${badge}</span><br>` : '';
+
+  row.innerHTML = `
+    <div class="avatar">${avatar}</div>
+    <div class="bubble">${badgeHtml}${escapeHtml(text)}</div>
+  `;
+  log.appendChild(row);
+  row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  return row;
+}
+
+function addTyping() {
+  const log = document.getElementById('log');
+  const row = document.createElement('div');
+  row.className = 'row bot';
+  row.id = 'typingRow';
+  row.innerHTML = `
+    <div class="avatar">🤖</div>
+    <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+  `;
+  log.appendChild(row);
+  row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function removeTyping() {
+  const row = document.getElementById('typingRow');
+  if (row) row.remove();
+}
+
+async function send() {
+  const input = document.getElementById('message');
+  const message = input.value.trim();
+  if (!message) return;
+
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+  input.value = '';
+
+  addRow('user', message);
+  addTyping();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, defenseLevel: currentLevel })
+    });
+
+    removeTyping();
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ error: 'Server error: ' + res.status }));
+      addRow('error', errData.error || 'Something went wrong on the server.');
+      return;
+    }
+
+    const data = await res.json();
+    const blocked = data.blockedByInputFilter || data.blockedByOutputFilter;
+    addRow(blocked ? 'blocked' : 'bot', data.reply, blocked ? 'Blocked' : null);
+  } catch (e) {
+    removeTyping();
+    addRow('error', 'Could not reach the server. Is the Spring Boot app still running on port 8080?');
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+</script>
+</body>
+</html>

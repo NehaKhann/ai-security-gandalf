@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+ollama:
+  base-url: http://localhost:11434
+  model: llama3.2
+
+gandalf-defender:
+  secret-password: SPRINGSECRET
+  # Change this at runtime via the /api/chat request body's "defenseLevel" field:
+  # 0 = no protection at all (like Gandalf Level 1)
+  # 1 = system prompt tells the model not to reveal it (like Gandalf Level 2-3)
+  # 2 = level 1 + output filter blocks the password if it slips through
+  # 3 = level 2 + input filter blocks suspicious/manipulative requests
