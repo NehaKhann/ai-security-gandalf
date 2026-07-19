@@ -57,7 +57,7 @@
     margin-bottom: 10px;
   }
 
-  .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 4px; }
+  .level-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 4px; }
 
   .level-btn {
     background: var(--surface-2);
@@ -179,7 +179,21 @@
       <div class="level-btn" data-level="1"><div class="num">1</div><span class="desc">Told not to</span></div>
       <div class="level-btn" data-level="2"><div class="num">2</div><span class="desc">+ output filter</span></div>
       <div class="level-btn" data-level="3"><div class="num">3</div><span class="desc">+ input filter</span></div>
+      <div class="level-btn" data-level="4"><div class="num">4</div><span class="desc">Model never knows it</span></div>
     </div>
+  </div>
+
+  <div class="panel" id="guessPanel" style="display:none;">
+    <div class="label">Guess the password directly (Level 4 only)</div>
+    <p style="color: var(--text-dim); font-size: 0.82rem; margin: -4px 0 12px 0;">
+      The chatbot doesn't know the real password anymore, so it can't be tricked into leaking it.
+      This box checks your guess against the real value in plain backend code - no AI involved.
+    </p>
+    <div class="composer">
+      <textarea id="guessInput" placeholder="Enter your guess..." style="height:40px;"></textarea>
+      <button class="send" onclick="submitGuess()">Check</button>
+    </div>
+    <div id="guessResult" style="margin-top:10px; font-size:0.9rem;"></div>
   </div>
 
   <div class="panel">
@@ -202,8 +216,37 @@ document.querySelectorAll('.level-btn').forEach(btn => {
     document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentLevel = parseInt(btn.dataset.level);
+    document.getElementById('guessPanel').style.display = currentLevel === 4 ? 'block' : 'none';
   });
 });
+
+async function submitGuess() {
+  const input = document.getElementById('guessInput');
+  const guess = input.value.trim();
+  if (!guess) return;
+  const resultDiv = document.getElementById('guessResult');
+  resultDiv.textContent = 'Checking...';
+  resultDiv.style.color = 'var(--text-dim)';
+
+  try {
+    const res = await fetch('/api/chat/guess', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guess })
+    });
+    const data = await res.json();
+    if (data.correct) {
+      resultDiv.textContent = '✅ Correct! (but you got this from outside the chat, not by tricking the AI)';
+      resultDiv.style.color = 'var(--success)';
+    } else {
+      resultDiv.textContent = '❌ Incorrect.';
+      resultDiv.style.color = 'var(--danger)';
+    }
+  } catch (e) {
+    resultDiv.textContent = 'Could not reach the server.';
+    resultDiv.style.color = 'var(--warn)';
+  }
+}
 
 function escapeHtml(str) {
   const div = document.createElement('div');
