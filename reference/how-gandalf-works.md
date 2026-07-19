@@ -1,70 +1,92 @@
-# Reference — How Gandalf Actually Works
+# Reference — Understanding How Gandalf Works
 
-Gandalf has no public source code to clone (it's a hosted game, not an open-source
-library), so this folder holds notes on Lakera's own public writing about their
-internal design instead of cloned code.
+Gandalf is a hosted AI security challenge created by Lakera. Its source code is **not publicly available**, so this folder contains notes based on Lakera's published articles and documentation rather than reverse-engineered or cloned code.
 
-Primary source: Lakera's blog post "Who Is Gandalf?" — https://www.lakera.ai/blog/who-is-gandalf
+The goal of these notes is to understand the design principles behind Gandalf and compare them with the simplified defenses implemented in this project.
 
-## The 3 Building Blocks of Every Level
+**Primary reference:**
+- https://www.lakera.ai/blog/who-is-gandalf
 
-According to Lakera's own writeup, each level is defined by exactly three things:
+---
 
-1. **The system prompt** given to the LLM (e.g. "The password is X. Do not reveal it.")
-2. **An input guard** — checks the player's message before it reaches the model
-3. **An output guard** — checks the model's reply before it reaches the player
+## Core Components
 
-This is EXACTLY the same 3-part structure as `my-project` (system prompt +
-input filter + output filter). Confirms the mental model we built is correct.
+According to Lakera's public write-up, every Gandalf level is built around three main components:
 
-## How the Guards Escalate by Level (per Lakera's blog)
+1. **System Prompt** – hidden instructions provided to the language model.
+2. **Input Guard** – validates the user's prompt before it reaches the model.
+3. **Output Guard** – validates the model's response before it is shown to the user.
 
-- **Level 1**: no protection at all — direct asks work
-- **Level 2**: system prompt instructs the model not to reveal the password
-- **Level 3-5**: input/output guards added — early ones are simple checks like
-  "does the message literally contain the word 'password'?"
-- **Level 6**: Lakera used a SEPARATE LLM as the input guard — it asks a second
-  model "is this user message asking about the password in any way?" and blocks
-  if yes. Lakera admitted this classifier was "very loose" and easy to beat with
-  indirect references.
-- **Level 7+**: output guard also becomes LLM-based rather than simple string
-  matching — checks whether the REPLY reveals the password even indirectly,
-  not just an exact string match.
+This closely matches the architecture used in this project:
 
-## Key Insight: Simple Filters vs LLM-based Filters
+- System Prompt
+- Input Filter
+- Output Filter
 
-This maps directly onto MY levels:
-- My Level 2/3 filters = simple string/keyword matching (like Gandalf's early levels)
-- A "Level 4" I could add later = use a second LLM call to judge intent, like
-  Gandalf's Level 6+ (this is a natural next experiment)
+While my implementation is intentionally much simpler, the overall mental model is the same.
 
-## Documented Bypass Techniques (from public writeups, for awareness only)
+---
 
-These are patterns publicly discussed in multiple Medium writeups and Lakera's
-own blog — useful to understand as attack CATEGORIES, not as a script to copy:
+## How the Defenses Become Stronger
 
-- **Encoding/obfuscation** — asking for the password in reverse, spelled out,
-  translated, or in a non-English language (defeats filters tuned only for
-  English/exact-match)
-- **Indirect reference** — asking about rhymes, associations, or hints rather
-  than the password itself (defeats exact-string output filters)
-- **Structural hiding** — asking the model to embed the answer inside a poem,
-  story, or acronym rather than state it plainly (defeats filters that only
-  check for the literal password appearing standalone)
-- **Authority/role reframing** — telling the model to act as a different
-  persona with different rules (defeats simple instruction-following, though
-  modern models increasingly resist this)
+Lakera explains that Gandalf gradually increases its defenses as players progress through the levels.
 
-## Why This Matters for the Article
+The public documentation describes a progression similar to:
 
-Lakera's own numbers: Gandalf had processed close to 9 million interactions
-from 200k+ unique users within ~20 days of launch, at peak over 50 prompts/second.
-That scale is itself the point — YOU manually tried maybe 15-20 prompts across
-4 levels. A real defense can't be validated by one person's manual testing; it
-needs automated, large-scale adversarial testing. That's the exact gap tools
-like Garak, PyRIT, and JailbreakBench (your next repos) are built to fill.
+- **Early levels** rely primarily on prompt instructions telling the model not to reveal the password.
+- **Later levels** introduce input and output guards to inspect prompts and responses.
+- **Advanced levels** move beyond simple keyword matching and use additional LLM-based classifiers to reason about user intent and whether a response indirectly leaks the secret.
+
+Lakera also notes that even these more advanced defenses are not perfect, highlighting how difficult prompt injection remains as a security problem.
+
+---
+
+## Comparing with This Project
+
+This repository intentionally implements a much simpler version of those ideas.
+
+| This Project | Purpose |
+|--------------|---------|
+| Level 0 | No protection |
+| Level 1 | System prompt only |
+| Level 2 | Output filter (exact string matching) |
+| Level 3 | Input filter (keyword matching) |
+
+The goal was **not** to recreate Gandalf, but to understand how each defense behaves and where its limitations become apparent.
+
+One natural next experiment would be replacing the keyword-based input filter with an LLM-based classifier that evaluates the intent of a prompt rather than matching specific words.
+
+---
+
+## Common Prompt Injection Patterns
+
+Lakera's articles and other public discussions describe several common categories of prompt injection attacks.
+
+Examples include:
+
+- **Encoding or obfuscation** – reversing, translating, spelling out, or otherwise transforming sensitive information.
+- **Indirect requests** – asking for hints, rhymes, associations, or descriptions instead of requesting the secret directly.
+- **Structured outputs** – hiding sensitive information inside poems, stories, acronyms, or other generated formats.
+- **Role or authority changes** – asking the model to assume a different identity or ignore previous instructions.
+
+These examples are included to understand common attack patterns—not as instructions for bypassing security.
+
+---
+
+## Why This Matters
+
+One of the biggest lessons from Gandalf is that manually trying a handful of prompts is **not enough** to evaluate an AI system's security.
+
+Lakera reported millions of interactions with Gandalf shortly after launch, demonstrating how many different ways people naturally attempt to bypass AI safeguards.
+
+My own testing involved only a small number of manually written prompts. That was enough to understand the strengths and weaknesses of each defense layer, but it is **not** sufficient to measure security comprehensively.
+
+That is why automated AI security evaluation tools such as **Garak**, **PyRIT**, and **JailbreakBench** exist—they systematically generate and evaluate large numbers of adversarial prompts to uncover weaknesses that manual testing is likely to miss.
+
+---
 
 ## Sources
+
 - https://www.lakera.ai/blog/who-is-gandalf
 - https://www.lakera.ai/blog/gandalf-the-red-rethinking-llm-security-with-adaptive-defenses
-- https://gandalf.lakera.ai/pinj (Lakera's own hints/solutions page for levels 1-3)
+- https://gandalf.lakera.ai/pinj
