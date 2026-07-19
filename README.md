@@ -1,4 +1,3 @@
-@"
 # AI Security Gandalf — Prompt Injection Basics
 
 Reference game: https://gandalf.lakera.ai
