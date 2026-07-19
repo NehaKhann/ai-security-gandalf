@@ -31,4 +31,3 @@ doing something else instead — e.g. revealing a secret it was told to protect.
 Any product with an LLM facing real users (chatbots, coding assistants, support
 bots) needs to defend against this. Learning the attack side first builds the
 instinct needed to design real defenses later.
-"@ | Out-File -FilePath README.md -Encoding utf8
