@@ -12,3 +12,4 @@ gandalf-defender:
   # 1 = system prompt tells the model not to reveal it (like Gandalf Level 2-3)
   # 2 = level 1 + output filter blocks the password if it slips through
   # 3 = level 2 + input filter blocks suspicious/manipulative requests
+  # 4 = the model is never told the real password; confirm guesses via POST /api/chat/guess instead
