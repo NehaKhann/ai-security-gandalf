@@ -151,7 +151,7 @@ This project is part of a two-part study into LLM security, moving from manual, 
 - **[ai-security-garak](https://github.com/NehaKhann/ai-security-garak)** — the natural next step: using NVIDIA's [garak](https://github.com/NVIDIA/garak) LLM vulnerability scanner to automate the same category of attacks at scale, instead of typing them by hand one at a time.
 
 **📖 From Gandalf to Garak — Automating the AI Attacks I Used to Type by Hand**
-*(Medium article connecting both projects — link to be added)*
+*([Medium link](https://medium.com/towards-artificial-intelligence/from-gandalf-to-garak-automating-the-ai-attacks-i-used-to-type-by-hand-9e588fff54ad?sharedUserId=n.nehakhan333))*
 
 **📖 I Tried to Break an AI's Security — Here's Everything I Learned as a Complete Beginner**
 *([Medium link](https://medium.com/@n.nehakhan333/i-tried-to-break-an-ais-security-here-s-everything-i-learned-as-a-complete-beginner-56ac3d6e9fd9?sharedUserId=n.nehakhan333))*
